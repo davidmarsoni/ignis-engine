@@ -1,0 +1,38 @@
+# Node modules
+node_modules/
+
+# Build outputs
+lib/
+dist/
+public/js/*
+build/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Firebase local cache and config
+.firebase/
+.firebaserc.local
+
+# Emulator data
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+storage-debug.log
+firestore-debug.log
+
+# dotenv files (keep secrets safe!)
+.env
+.env.*
+!.env.example
+
+# VSCode
+.vscode/
+*.code-workspace
+

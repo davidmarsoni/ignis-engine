@@ -1,0 +1,20 @@
+{
+  "name": "ignis-engine",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Firebase-powered web application with Google authentication",
+  "main": "public/js/main.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "serve": "firebase serve",
+    "deploy": "npm run build && firebase deploy"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "dependencies": {
+    "firebase": "^10.0.0"
+  }
+}
