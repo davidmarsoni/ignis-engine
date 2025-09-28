@@ -1,208 +1,136 @@
 import AuthService, { User } from './auth.js';
 
 class CanvasApp {
-  private authService: AuthService;
+  private authService = new AuthService();
+  private signInButton: HTMLButtonElement | null = null;
+  private signOutButton: HTMLButtonElement | null = null;
   private loadingState: HTMLElement | null = null;
   private userState: HTMLElement | null = null;
   private authRequiredState: HTMLElement | null = null;
   private userAvatarContainer: HTMLElement | null = null;
   private userName: HTMLElement | null = null;
   private userEmail: HTMLElement | null = null;
-  private logoutButton: HTMLElement | null = null;
-  private signInButton: HTMLElement | null = null;
+  private canvasArea: HTMLElement | null = null;
+  private canvasLocked: HTMLElement | null = null;
+  private canvasElement: HTMLCanvasElement | null = null;
+  private hasReceivedAuthState = false;
 
   constructor() {
-    this.authService = new AuthService();
-    this.init();
-  }
-
-  private init(): void {
-    // Wait for DOM to load
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.setupUI());
+      document.addEventListener('DOMContentLoaded', () => this.setup());
     } else {
-      this.setupUI();
+      this.setup();
     }
   }
 
-  private async setupUI(): Promise<void> {
-    try {
-      // Get UI elements
-      this.loadingState = document.getElementById('loading-state');
-      this.userState = document.getElementById('user-state');
-      this.authRequiredState = document.getElementById('auth-required-state');
-      this.userAvatarContainer = document.getElementById('user-avatar-container');
-      this.userName = document.getElementById('user-name');
-      this.userEmail = document.getElementById('user-email');
-      this.logoutButton = document.getElementById('logout-btn');
-      this.signInButton = document.getElementById('sign-in-btn');
+  private setup(): void {
+    this.signInButton = document.getElementById('sign-in-btn') as HTMLButtonElement | null;
+    this.signOutButton = document.getElementById('logout-btn') as HTMLButtonElement | null;
+    this.loadingState = document.getElementById('loading-state');
+    this.userState = document.getElementById('user-state');
+    this.authRequiredState = document.getElementById('auth-required-state');
+    this.userAvatarContainer = document.getElementById('user-avatar-container');
+    this.userName = document.getElementById('user-name');
+    this.userEmail = document.getElementById('user-email');
+  this.canvasArea = document.getElementById('canvas-area');
+  this.canvasLocked = document.getElementById('canvas-locked');
+  this.canvasElement = document.getElementById('canvas') as HTMLCanvasElement | null;
 
-      // Set up event listeners
-      if (this.logoutButton) {
-        this.logoutButton.addEventListener('click', () => this.handleLogout());
-      }
+    this.signInButton?.addEventListener('click', () => this.handleSignIn());
+    this.signOutButton?.addEventListener('click', () => this.handleSignOut());
 
-      if (this.signInButton) {
-        this.signInButton.addEventListener('click', () => this.handleSignIn());
-      }
+    this.authService.onAuthStateChanged((user) => {
+      this.hasReceivedAuthState = true;
+      this.render(user);
+    });
 
-      // Wait for Firebase to initialize
-      await this.authService.waitForInitialization();
-
-      // Listen for auth state changes
-      this.authService.onAuthStateChanged((user) => {
-        this.updateUI(user);
-      });
-
-      // Initial UI update
-      this.updateUI(this.authService.getCurrentUser());
-
-    } catch (error) {
-      console.error('Error setting up canvas UI:', error);
-      this.showError('Failed to initialize authentication');
-    }
+    this.render(this.authService.getCurrentUser());
   }
 
-  private updateUI(user: User | null): void {
-    console.log('Updating canvas UI for user:', user);
-    
-    // Hide loading state
-    if (this.loadingState) {
-      this.loadingState.style.display = 'none';
-    }
-    
-    if (user) {
-      // User is signed in - show user state
-      this.showUserState(user);
+  private render(user: User | null): void {
+    const showLoading = !this.hasReceivedAuthState;
+    const isSignedIn = Boolean(user);
+
+    this.toggleElement(this.loadingState, !showLoading);
+    this.toggleElement(this.userState, !(isSignedIn && !showLoading));
+    this.toggleElement(this.authRequiredState, !(!isSignedIn && !showLoading));
+  this.toggleElement(this.canvasArea, !(isSignedIn && !showLoading));
+  this.toggleElement(this.canvasLocked, !(!isSignedIn && !showLoading));
+
+    if (this.signInButton) this.signInButton.hidden = isSignedIn;
+    if (this.signOutButton) this.signOutButton.hidden = !isSignedIn;
+
+    if (user && !showLoading) {
+      this.updateUserCard(user);
     } else {
-      // User is not signed in - show auth required state
-      this.showAuthRequiredState();
+      this.clearUserCard();
     }
   }
 
-  private showUserState(user: User): void {
-    if (this.userState) {
-      this.userState.style.display = 'block';
-    }
-    if (this.authRequiredState) {
-      this.authRequiredState.style.display = 'none';
-    }
-
-    this.updateUserInfo(user);
-  }
-
-  private showAuthRequiredState(): void {
-    if (this.userState) {
-      this.userState.style.display = 'none';
-    }
-    if (this.authRequiredState) {
-      this.authRequiredState.style.display = 'block';
+  private toggleElement(element: HTMLElement | null, hidden: boolean): void {
+    if (!element) return;
+    if (hidden) {
+      element.classList.add('hidden');
+    } else {
+      element.classList.remove('hidden');
     }
   }
 
-  private updateUserInfo(user: User): void {
-    // Update user avatar
-    if (this.userAvatarContainer) {
-      if (user.photoURL) {
-        this.userAvatarContainer.innerHTML = `
-          <img src="${user.photoURL}" 
-               alt="Profile" 
-               class="w-8 h-8 rounded-full object-cover border border-gray-300"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium" style="display: none;">
-            ${this.getUserInitial(user)}
-          </div>
-        `;
-      } else {
-        this.userAvatarContainer.innerHTML = `
-          <div class="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium">
-            ${this.getUserInitial(user)}
-          </div>
-        `;
-      }
-    }
+  private updateUserCard(user: User): void {
+    if (this.userName) this.userName.textContent = user.displayName ?? 'Anonymous user';
+    if (this.userEmail) this.userEmail.textContent = user.email ?? '';
 
-    // Update user name
-    if (this.userName) {
-      this.userName.textContent = user.displayName || 'Unknown User';
-    }
+    if (!this.userAvatarContainer) return;
 
-    // Update user email
-    if (this.userEmail) {
-      this.userEmail.textContent = user.email || '';
-    }
+    const initial = this.getInitial(user);
+    const photoURL = user.photoURL;
+
+    this.userAvatarContainer.innerHTML = photoURL
+      ? `
+        <img
+          src="${photoURL}"
+          alt="Profile"
+          class="w-8 h-8 rounded-full object-cover border border-gray-300"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        />
+        <div class="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium" style="display: none;">
+          ${initial}
+        </div>
+      `
+      : `
+        <div class="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium">
+          ${initial}
+        </div>
+      `;
   }
 
-  private getUserInitial(user: User): string {
-    return user.displayName?.charAt(0)?.toUpperCase() || 
-           user.email?.charAt(0)?.toUpperCase() || 
-           'U';
+  private clearUserCard(): void {
+    if (this.userName) this.userName.textContent = '';
+    if (this.userEmail) this.userEmail.textContent = '';
+    if (this.userAvatarContainer) this.userAvatarContainer.innerHTML = '';
+  }
+
+  private getInitial(user: User): string {
+    return user.displayName?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase() ?? 'U';
   }
 
   private async handleSignIn(): Promise<void> {
+    if (this.signInButton) this.signInButton.disabled = true;
     try {
-      if (this.signInButton) {
-        this.signInButton.textContent = 'Signing in...';
-        (this.signInButton as HTMLButtonElement).disabled = true;
-      }
-      
       await this.authService.signInWithGoogle();
-      console.log('User signed in successfully from canvas');
-      
-    } catch (error) {
-      console.error('Sign-in failed:', error);
-      alert(`Sign-in failed: ${error}`);
-      
-      // Restore button state on error
-      if (this.signInButton) {
-        this.signInButton.textContent = 'Sign in with Google';
-        (this.signInButton as HTMLButtonElement).disabled = false;
-      }
+    } finally {
+      if (this.signInButton) this.signInButton.disabled = false;
     }
   }
 
-  private async handleLogout(): Promise<void> {
+  private async handleSignOut(): Promise<void> {
+    if (this.signOutButton) this.signOutButton.disabled = true;
     try {
-      if (this.logoutButton) {
-        this.logoutButton.textContent = 'Signing out...';
-        (this.logoutButton as HTMLButtonElement).disabled = true;
-      }
-      
       await this.authService.signOutUser();
-      console.log('User signed out successfully from canvas');
-      
-      // No redirect needed since we're already on the canvas page
-      
-    } catch (error) {
-      console.error('Logout failed:', error);
-      alert(`Logout failed: ${error}`);
-      
-      // Restore button state on error
-      if (this.logoutButton) {
-        this.logoutButton.textContent = 'Log out';
-        (this.logoutButton as HTMLButtonElement).disabled = false;
-      }
-    }
-  }
-
-  private showError(message: string): void {
-    // Show error in the account zone
-    const accountZone = document.getElementById('account-zone');
-    if (accountZone) {
-      accountZone.innerHTML = `
-        <div class="text-center text-red-600 text-sm">
-          <div class="mb-2">⚠️ Error</div>
-          <div>${message}</div>
-          <button onclick="location.reload()" class="mt-2 text-blue-600 hover:text-blue-700 underline text-xs">
-            Retry
-          </button>
-        </div>
-      `;
+    } finally {
+      if (this.signOutButton) this.signOutButton.disabled = false;
     }
   }
 }
 
-// Initialize the canvas app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  new CanvasApp();
-});
+new CanvasApp();
