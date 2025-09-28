@@ -84,24 +84,31 @@ class CanvasApp {
 
     const initial = this.getInitial(user);
     const photoURL = user.photoURL;
+    this.userAvatarContainer.textContent = '';
 
-    this.userAvatarContainer.innerHTML = photoURL
-      ? `
-        <img
-          src="${photoURL}"
-          alt="Profile"
-          class="w-8 h-8 rounded-full object-cover border border-gray-300"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-        />
-        <div class="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium" style="display: none;">
-          ${initial}
-        </div>
-      `
-      : `
-        <div class="w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium">
-          ${initial}
-        </div>
-      `;
+    const fallback = document.createElement('div');
+    fallback.className = 'w-8 h-8 rounded-full bg-gray-500 text-white flex items-center justify-center text-sm font-medium';
+    fallback.textContent = initial;
+
+    if (photoURL) {
+      const image = document.createElement('img');
+      image.src = photoURL;
+      image.alt = 'Profile';
+      image.className = 'w-8 h-8 rounded-full object-cover border border-gray-300';
+      image.referrerPolicy = 'no-referrer';
+      image.loading = 'lazy';
+      image.addEventListener('error', () => {
+        image.style.display = 'none';
+        fallback.style.display = 'flex';
+      });
+      image.addEventListener('load', () => {
+        fallback.style.display = 'none';
+      });
+
+      this.userAvatarContainer.append(image, fallback);
+    } else {
+      this.userAvatarContainer.append(fallback);
+    }
   }
 
   private clearUserCard(): void {

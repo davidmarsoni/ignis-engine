@@ -44,11 +44,15 @@ export class AuthService {
   }
 
   private mapUser(firebaseUser: any): User {
+    const providerProfile = firebaseUser.providerData?.find(
+      (profile: any) => profile && (profile.displayName || profile.email || profile.photoURL)
+    ) ?? firebaseUser.providerData?.[0];
+
     return {
       uid: firebaseUser.uid,
-      displayName: firebaseUser.displayName,
-      email: firebaseUser.email,
-      photoURL: firebaseUser.photoURL
+      displayName: firebaseUser.displayName ?? providerProfile?.displayName ?? null,
+      email: firebaseUser.email ?? providerProfile?.email ?? null,
+      photoURL: firebaseUser.photoURL ?? providerProfile?.photoURL ?? null
     };
   }
 
