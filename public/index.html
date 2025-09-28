@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ignis Engine - Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+  </head>
+  <body class="bg-gray-50 h-screen">
+    <!-- Account Zone - Top Left -->
+    <div class="absolute top-4 left-4">
+      <div id="account-zone" class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+        <!-- Loading state -->
+        <div id="loading-state" class="flex items-center gap-2">
+          <div class="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          <span class="text-sm text-gray-600">Loading...</span>
+        </div>
+        
+        <!-- User state (hidden by default) -->
+        <div id="user-state" class="hidden">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <!-- User avatar placeholder -->
+              <div id="user-avatar-container">
+                <!-- Avatar will be inserted here -->
+              </div>
+              
+              <div>
+                <div id="user-name" class="text-sm font-medium text-gray-900">John Doe</div>
+                <div id="user-email" class="text-xs text-gray-500">john@example.com</div>
+              </div>
+            </div>
+            
+            <button id="logout-btn" class="ml-4 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded px-2 py-1">
+              Log out
+            </button>
+          </div>
+        </div>
+        
+        <!-- Not authenticated state -->
+        <div id="auth-required-state" class="hidden text-center">
+          <div class="text-sm text-gray-600 mb-2">Sign in to continue</div>
+          <button id="sign-in-btn" class="text-blue-600 hover:text-blue-700 text-sm underline bg-transparent border-none cursor-pointer">
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Canvas Area -->
+    <div class="w-full h-full flex items-center justify-center">
+      <div id="canvas-locked" class="text-center text-gray-400">
+        <div class="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </div>
+        <p class="text-lg font-medium mb-2">Your blank canvas awaits</p>
+        <p class="text-sm">Sign in to unlock the editor</p>
+      </div>
+
+      <div id="canvas-area" class="hidden">
+        <canvas
+          id="canvas"
+          width="1520"
+          height="720"
+          class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg"
+          style="image-rendering: pixelated;"
+        ></canvas>
+      </div>
+    </div>
+
+    <!-- Load our application -->
+    <script type="module" src="js/canvas.js"></script>
+  </body>
+</html>
