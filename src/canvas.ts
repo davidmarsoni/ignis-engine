@@ -14,7 +14,6 @@ class CanvasApp {
   private userEmail: HTMLElement | null = null;
   private canvasArea: HTMLElement | null = null;
   private canvasLocked: HTMLElement | null = null;
-  private canvasElement: HTMLCanvasElement | null = null;
   private hasReceivedAuthState = false;
 
   constructor() {
@@ -34,9 +33,9 @@ class CanvasApp {
     this.userAvatarContainer = document.getElementById('user-avatar-container');
     this.userName = document.getElementById('user-name');
     this.userEmail = document.getElementById('user-email');
-  this.canvasArea = document.getElementById('canvas-area');
-  this.canvasLocked = document.getElementById('canvas-locked');
-  this.canvasElement = document.getElementById('canvas') as HTMLCanvasElement | null;
+    this.canvasArea = document.getElementById('canvas-area');
+    this.canvasLocked = document.getElementById('canvas-locked');
+
 
     this.signInButton?.addEventListener('click', () => this.handleSignIn());
     this.signOutButton?.addEventListener('click', () => this.handleSignOut());

@@ -1,24 +1,82 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import AuthService, { type User } from "./auth";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+class App {
+  private authService = new AuthService();
+  private loginButton: HTMLButtonElement | null = null;
+  private logoutButton: HTMLButtonElement | null = null;
+  private userInfo: HTMLElement | null = null;
+  private loginSection: HTMLElement | null = null;
+  private userSection: HTMLElement | null = null;
+
+  constructor() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setup());
+    } else {
+      this.setup();
+    }
+  }
+
+  private setup(): void {
+    this.loginButton = document.getElementById('login-btn') as HTMLButtonElement | null;
+    this.logoutButton = document.getElementById('logout-btn') as HTMLButtonElement | null;
+    this.userInfo = document.getElementById('user-info');
+    this.loginSection = document.getElementById('login-section');
+    this.userSection = document.getElementById('user-section');
+
+    this.loginButton?.addEventListener('click', () => this.handleLogin());
+    this.logoutButton?.addEventListener('click', () => this.handleLogout());
+
+    this.authService.onAuthStateChanged((user) => this.render(user));
+    this.render(this.authService.getCurrentUser());
+  }
+
+  private render(user: User | null): void {
+    const isSignedIn = Boolean(user);
+
+    if (this.loginSection) this.loginSection.hidden = isSignedIn;
+    if (this.userSection) this.userSection.hidden = !isSignedIn;
+    if (this.logoutButton) this.logoutButton.hidden = !isSignedIn;
+
+    if (user) {
+      this.updateUserInfo(user);
+    } else if (this.userInfo) {
+      this.userInfo.textContent = '';
+    }
+  }
+
+  private updateUserInfo(user: User): void {
+    if (!this.userInfo) return;
+
+    const name = user.displayName ?? 'Anonymous user';
+    const email = user.email ?? '';
+
+    this.userInfo.innerHTML = `
+      <div>
+        <div>${name}</div>
+        <div>${email}</div>
+      </div>
+    `;
+  }
+
+  private async handleLogin(): Promise<void> {
+    if (this.loginButton) this.loginButton.disabled = true;
+    try {
+      await this.authService.signInWithGoogle();
+      window.location.href = 'index.html';
+    } finally {
+      if (this.loginButton) this.loginButton.disabled = false;
+    }
+  }
+
+  private async handleLogout(): Promise<void> {
+    if (this.logoutButton) this.logoutButton.disabled = true;
+    try {
+      await this.authService.signOutUser();
+    } finally {
+      if (this.logoutButton) this.logoutButton.disabled = false;
+    }
+  }
+}
+
+new App();
