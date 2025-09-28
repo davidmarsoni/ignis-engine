@@ -1,4 +1,5 @@
 import AuthService, { User } from './auth.js';
+import { startGame } from './game.js';
 
 class CanvasApp {
   private authService = new AuthService();
@@ -45,6 +46,7 @@ class CanvasApp {
     });
 
     this.render(this.authService.getCurrentUser());
+    startGame();
   }
 
   private render(user: User | null): void {

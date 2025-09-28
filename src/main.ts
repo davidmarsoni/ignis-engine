@@ -1,4 +1,5 @@
 import AuthService, { User } from './auth.js';
+import { startGame } from './game.js';
 
 class App {
   private authService = new AuthService();
