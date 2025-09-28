@@ -9,8 +9,14 @@
     "preview": "vite preview",
     "deploy": "npm run build && firebase deploy"
   },
+  "dependencies": {
+    "uuid": "^10.0.0",
+    "firebase": "^10.0.0"
+  },
   "devDependencies": {
     "typescript": "~5.8.3",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^10.0.0"
   }
 }
