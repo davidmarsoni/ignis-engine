@@ -50,14 +50,24 @@
     
     <!-- Main Canvas Area -->
     <div class="w-full h-full flex items-center justify-center">
-      <div class="text-center text-gray-400">
+      <div id="canvas-locked" class="text-center text-gray-400">
         <div class="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
           </svg>
         </div>
         <p class="text-lg font-medium mb-2">Your blank canvas awaits</p>
-        <p class="text-sm">Start creating something amazing</p>
+        <p class="text-sm">Sign in to unlock the editor</p>
+      </div>
+
+      <div id="canvas-area" class="hidden">
+        <canvas
+          id="canvas"
+          width="1520"
+          height="720"
+          class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg"
+          style="image-rendering: pixelated;"
+        ></canvas>
       </div>
     </div>
 

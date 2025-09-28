@@ -22,110 +22,71 @@ export class AuthService {
   private auth: any = null;
   private provider: any = null;
   private currentUser: User | null = null;
-  private authStateListeners: ((user: User | null) => void)[] = [];
-  private initialized: boolean = false;
+  private listeners: Array<(user: User | null) => void> = [];
+  private readonly initialization: Promise<void>;
 
   constructor() {
-    this.initializeFirebase();
+    this.initialization = this.initializeFirebase();
   }
 
   private async initializeFirebase(): Promise<void> {
-    try {
-      // Import Firebase services from CDN
-      const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js' as any);
-      const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = 
-        await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js' as any);
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js' as any);
+    const { getAuth, GoogleAuthProvider, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js' as any);
 
-      // Initialize Firebase
-      this.app = initializeApp(firebaseConfig);
-      this.auth = getAuth(this.app);
-      this.provider = new GoogleAuthProvider();
+    this.app = initializeApp(firebaseConfig);
+    this.auth = getAuth(this.app);
+    this.provider = new GoogleAuthProvider();
 
-      // Set up auth state listener
-      onAuthStateChanged(this.auth, (firebaseUser: any) => {
-        this.currentUser = firebaseUser ? {
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL
-        } : null;
-        
-        this.notifyAuthStateListeners(this.currentUser);
-      });
-
-      this.initialized = true;
-      console.log('Firebase initialized successfully');
-
-    } catch (error) {
-      console.error('Error initializing Firebase:', error);
-      throw new Error(`Firebase initialization failed: ${error}`);
-    }
+    onAuthStateChanged(this.auth, (firebaseUser: any) => {
+      this.currentUser = firebaseUser ? this.mapUser(firebaseUser) : null;
+      this.listeners.forEach((listener) => listener(this.currentUser));
+    });
   }
 
-  // Wait for Firebase to be initialized
-  public async waitForInitialization(): Promise<void> {
-    while (!this.initialized) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+  private mapUser(firebaseUser: any): User {
+    return {
+      uid: firebaseUser.uid,
+      displayName: firebaseUser.displayName,
+      email: firebaseUser.email,
+      photoURL: firebaseUser.photoURL
+    };
   }
 
-  // Sign in with Google
-  public async signInWithGoogle(): Promise<User | null> {
-    await this.waitForInitialization();
-    
-    try {
-      const { signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js' as any);
-      const result = await signInWithPopup(this.auth, this.provider);
-      return {
-        uid: result.user.uid,
-        displayName: result.user.displayName,
-        email: result.user.email,
-        photoURL: result.user.photoURL
-      };
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
-      throw error;
-    }
+  private async ensureReady(): Promise<void> {
+    return this.initialization;
   }
 
-  // Sign out
-  public async signOutUser(): Promise<void> {
-    await this.waitForInitialization();
-    
-    try {
-      const { signOut } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js' as any);
-      await signOut(this.auth);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
-  }
-
-  // Get current user
   public getCurrentUser(): User | null {
     return this.currentUser;
   }
 
-  // Add auth state listener
   public onAuthStateChanged(callback: (user: User | null) => void): () => void {
-    this.authStateListeners.push(callback);
-    
-    // Return unsubscribe function
+    this.listeners.push(callback);
+    callback(this.currentUser);
+
     return () => {
-      const index = this.authStateListeners.indexOf(callback);
-      if (index > -1) {
-        this.authStateListeners.splice(index, 1);
+      const index = this.listeners.indexOf(callback);
+      if (index >= 0) {
+        this.listeners.splice(index, 1);
       }
     };
   }
 
-  // Check if user is signed in
-  public isSignedIn(): boolean {
-    return this.currentUser !== null;
+  public async signInWithGoogle(): Promise<User | null> {
+    await this.ensureReady();
+    const { signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js' as any);
+    const result = await signInWithPopup(this.auth, this.provider);
+    return this.mapUser(result.user);
   }
 
-  private notifyAuthStateListeners(user: User | null): void {
-    this.authStateListeners.forEach(listener => listener(user));
+  public async signOutUser(): Promise<void> {
+    await this.ensureReady();
+    const { signOut } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js' as any);
+    await signOut(this.auth);
+  }
+
+  public isSignedIn(): boolean {
+    return this.currentUser !== null;
   }
 }
 
