@@ -1,4 +1,4 @@
-import { NoneValue, SomeValue, type Option } from "./wrapper-type.js";
+import { ErrValue, NoneValue, OkValue, Result, SomeValue, type Option } from "./wrapper-type.js";
 
 export interface Hashable {
   hash(): number;
@@ -40,24 +40,22 @@ export class HashMap<K extends Hashable, V> {
     return pair ? SomeValue(pair[1]) : NoneValue();
   }
 
-  // Supprime une entrée et retourne sa valeur (Option)
-  delete(key: K): Option<V> {
+  // Supprime une entrée et retourne sa valeur
+  delete(key: K): Result<void, string> {
     const hash = key.hash();
     const bucket = this.buckets.get(hash);
-    if (!bucket) return NoneValue();
+    if (!bucket) return ErrValue(`key ${key} is not in hashmap`);
 
     const idx = bucket.findIndex(
       ([k]) => k.hash() === hash && this.isEqual(k, key),
     );
-    if (idx === -1) return NoneValue();
-
-    const [, value] = bucket.splice(idx, 1)[0];
+    if (idx === -1) return ErrValue(`key ${key} is not in hashmap`);
     if (bucket.length === 0) {
       this.buckets.delete(hash);
     } else {
       this.buckets.set(hash, bucket);
     }
-    return SomeValue(value);
+    return OkValue(undefined);
   }
 
   count(): number {

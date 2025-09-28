@@ -1,7 +1,7 @@
 import { Hashable, HashMap } from "./utils/hashmap.js";
+import { Result } from "./utils/wrapper-type.js";
 
 // implementation of ecs based on https://austinmorlan.com/posts/entity_component_system/
-
 export class Signature {
   private sig: number;
 
@@ -32,8 +32,10 @@ export class Signature {
   }
 }
 
-type ComponentType = number;
-const MAX_COMPONENTS: ComponentType = 32;
+interface Component {
+  getTypeId(): number;
+};
+const MAX_COMPONENTS: number = 32;
 
 export class Entity implements Hashable {
   id: number;
@@ -51,46 +53,42 @@ export class Entity implements Hashable {
 
 const MAX_ENTITIES: number = 5000;
 
+interface System extends Hashable{
+  getComponentsSignature(): Signature
+}
+
 // started EntityManager, need heavy refactoring
 
-// class EntityManager {
-//   private availableEntities = new HashMap<Entity, ComponentType[]>();
+class EcsManager {
+  private entities = new HashMap<Entity, Component[]>();
+  private sytemsMap = new HashMap<System, Entity[]>();
 
-//   createEntity(): Entity {
-//     if (this.availableEntities.count() >= MAX_ENTITIES) {
-//       throw new Error("Too many entities in existence.");
-//     }
+  registerSystem(system: System) {
+    this.sytemsMap.set(system, []);
+  }
 
-//     const id = this.availableEntities.count() + 1;
+  updateSystemMap(){
+    this.sytemsMap
+  }
 
-//     }
+  createEntity(): Entity {
+    if (this.entities.count() >= MAX_ENTITIES) {
+      throw new Error("Too many entities in existence.");
+    }
 
-//     // Ici _tag est "Some", on peut accéder à value
-//     this.mAvailableEntities.dequeue();
-//     ++this.mLivingEntityCount;
-//     return idOption.value;
-//   }
+    // TODO, better way to create id and being able to reuse ids when we delete entities
+    const id = this.entities.count() + 1;
+    return new Entity(id, new Signature());
+    }
 
-//   destroyEntity(entity: Entity): void {
-//     if (entity >= MAX_ENTITIES) {
-//       throw new Error("Entity out of range.");
-//     }
-//     this.mSignatures[entity] = 0; // Equivalent to .reset bitset
-//     this.mAvailableEntities.enqueue(entity);
-//     --this.mLivingEntityCount;
-//   }
+  destroyEntity(entity: Entity): Result<void, string>{
+    return this.entities.delete(entity);
+  }
 
-//   setSignature(entity: Entity, signature: Signature): void {
-//     if (entity >= MAX_ENTITIES) {
-//       throw new Error("Entity out of range.");
-//     }
-//     this.mSignatures[entity] = signature;
-//   }
-
-//   getSignature(entity: Entity): Signature {
-//     if (entity >= MAX_ENTITIES) {
-//       throw new Error("Entity out of range.");
-//     }
-//     return this.mSignatures[entity];
-//   }
-// }
+  setEntityComponents(entity: Entity, components: Component[]){
+    for (const component of components){
+      entity.components_signature.setFlag(component.getTypeId())
+    }
+    this.entities.set(entity, components);
+  }
+}
