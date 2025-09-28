@@ -25,3 +25,9 @@ dist-ssr
 
 # env files
 *.env
+
+# Firebase
+.firebase/
+.firebaserc
+.firebaserc.local
+.firebaserc.*.local
