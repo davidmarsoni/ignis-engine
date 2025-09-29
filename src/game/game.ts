@@ -1,13 +1,14 @@
 import { ECS } from "../ecs";
 
 import { setupRendering, ShapeComp, TextComp } from "./rendering";
+import { SpriteComp } from "./rendering";
 import { PositionComp, setupMovement, Vec2, VelocityComp } from "./movement";
 
 // Global ECS instance
 const ecs = new ECS();
 
 // setting game loop
-const fps: number = 40;
+const fps: number = 48;
 const interval: number = 1000 / fps;
 
 // variables for the game loop
@@ -52,6 +53,15 @@ export function startGame() {
     ecs.addComponent(circleText, new PositionComp(new Vec2(500, 100)))
     ecs.addComponent(circleText, new ShapeComp({ type: "circle", radius: 30 }, "red"))
     ecs.addComponent(circleText, new TextComp("c", "white", "red"))
+
+    // collectible sprite: use the first frame (top-left) of the Collectible spritesheet
+    const collectible = ecs.addEntity();
+    ecs.addComponent(collectible, new PositionComp(new Vec2(200, 200)));
+    ecs.addComponent(collectible, new SpriteComp('/assets/sprites/Collectible.png',16, 16, 32, 0, 4, 200));
+
+    const collectible2 = ecs.addEntity();
+    ecs.addComponent(collectible2, new PositionComp(new Vec2(220, 220)));
+    ecs.addComponent(collectible2, new SpriteComp('/assets/sprites/Collectible.png',16, 16, 0, 16, 4, 200));
 
     animate();
 }
