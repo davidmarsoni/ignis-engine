@@ -138,6 +138,15 @@ export class ECS {
         return entity;
     }
 
+        /**
+         * Reset the ECS to a clean state. Used when stopping a game.
+         */
+        public reset(): void {
+            this.entities.clear();
+            this.systems.clear();
+            this.entitiesToDestroy.length = 0;
+        }
+
     /**
      * Marks `entity` for removal. The actual removal happens at the end
      * of the next `update()`. This way we avoid subtle bugs where an

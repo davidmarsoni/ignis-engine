@@ -14,10 +14,11 @@ const interval: number = 1000 / fps;
 let now: number;
 let then: number = Date.now();
 let delta: number;
+let rafId: number | null = null;
 
 // The game loop
 function animate(): void {
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
 
     now = Date.now();
     delta = now - then;
@@ -53,4 +54,15 @@ export function startGame() {
     ecs.addComponent(circleText, new TextComp("c", "white", "red"))
 
     animate();
+}
+
+export function stopGame(): void {
+    // cancel the animation frame if running
+    if (typeof rafId === 'number') {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+    }
+
+    // reset ECS state so next start is clean
+    ecs.reset();
 }

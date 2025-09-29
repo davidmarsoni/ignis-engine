@@ -1,6 +1,6 @@
 import AuthService from './auth.js';
 import type { User } from './auth.js';
-import { startGame } from './game/game.js';
+import { startGame, stopGame } from './game/game.js';
 
 class CanvasApp {
   private authService = new AuthService();
@@ -45,8 +45,7 @@ class CanvasApp {
       this.render(user);
     });
 
-    this.render(this.authService.getCurrentUser());
-    startGame();
+  this.render(this.authService.getCurrentUser());
   }
 
   private render(user: User | null): void {
@@ -64,8 +63,12 @@ class CanvasApp {
 
     if (user && !showLoading) {
       this.updateUserCard(user);
+      // Start the game when a user is signed in
+      startGame();
     } else {
       this.clearUserCard();
+      // Stop the game when not signed in
+      stopGame();
     }
   }
 
