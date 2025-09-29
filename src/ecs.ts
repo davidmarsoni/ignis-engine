@@ -205,6 +205,7 @@ export class ECS {
         // Update all systems. (Later, we'll add a way to specify the
         // update order.)
         for (let [system, entities] of this.systems.entries()) {
+            console.log(entities)
             system.update(entities)
         }
 

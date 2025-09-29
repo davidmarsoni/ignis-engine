@@ -1,6 +1,6 @@
 import AuthService from './auth.js';
 import type { User } from './auth.js';
-import { startGame } from './game.js';
+import { startGame } from './game/game.js';
 
 class CanvasApp {
   private authService = new AuthService();
@@ -56,8 +56,8 @@ class CanvasApp {
     this.toggleElement(this.loadingState, !showLoading);
     this.toggleElement(this.userState, !(isSignedIn && !showLoading));
     this.toggleElement(this.authRequiredState, !(!isSignedIn && !showLoading));
-  this.toggleElement(this.canvasArea, !(isSignedIn && !showLoading));
-  this.toggleElement(this.canvasLocked, !(!isSignedIn && !showLoading));
+    this.toggleElement(this.canvasArea, !(isSignedIn && !showLoading));
+    this.toggleElement(this.canvasLocked, !(!isSignedIn && !showLoading));
 
     if (this.signInButton) this.signInButton.hidden = isSignedIn;
     if (this.signOutButton) this.signOutButton.hidden = !isSignedIn;
