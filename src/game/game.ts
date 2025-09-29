@@ -1,6 +1,6 @@
 import { ECS } from "../ecs";
 
-import { Position, setupRendering, TextComponent } from "./rendering";
+import { PositionComp, setupRendering, TextComp } from "./rendering";
 
 // Global ECS instance
 const ecs = new ECS();
@@ -35,8 +35,5 @@ function loop(): void {
 
 export function startGame() {
     setupRendering(ecs)
-    const player = ecs.addEntity();
-    ecs.addComponent(player, new Position(200, 100))
-    ecs.addComponent(player, new TextComponent("test", "white", "black"))
     animate();
 }
