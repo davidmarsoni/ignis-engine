@@ -41,6 +41,12 @@ export abstract class System {
     public abstract componentsRequired: Set<Function>
 
     /**
+     * Specify the order of execution of systems, systems with lower executionOrder will be
+     * executed before systems with higher executionOrder
+     */
+    public abstract executionOrder: number;
+
+    /**
      * update() is called on the System every frame.
      */
     public abstract update(entities: Set<Entity>): void
@@ -163,16 +169,6 @@ export class ECS {
     // API: Systems
 
     public addSystem(system: System): void {
-        // Checking invariant: systems should not have an empty
-        // Components list, or they'll run on every entity. Simply remove
-        // or special case this check if you do want a System that runs
-        // on everything.
-        if (system.componentsRequired.size == 0) {
-            console.warn("System not added: empty Components list.");
-            console.warn(system);
-            return;
-        }
-
         // Give system a reference to the ECS so it can actually do
         // anything.
         system.ecs = this;
@@ -182,6 +178,12 @@ export class ECS {
         for (let entity of this.entities.keys()) {
             this.checkES(entity, system);
         }
+
+        // Sort systems by executionOrder after adding
+        const sortedSystems = Array.from(this.systems.entries())
+            .sort(([a], [b]) => a.executionOrder - b.executionOrder);
+
+        this.systems = new Map(sortedSystems);
     }
 
     /**
@@ -205,8 +207,11 @@ export class ECS {
         // Update all systems. (Later, we'll add a way to specify the
         // update order.)
         for (let [system, entities] of this.systems.entries()) {
-            console.log(entities)
-            system.update(entities)
+            if (system.componentsRequired.size == 0) {
+                system.update(new Set())
+            } else {
+                system.update(entities)
+            }
         }
 
         // Remove any entities that were marked for deletion during the

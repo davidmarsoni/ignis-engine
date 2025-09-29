@@ -1,38 +1,22 @@
 import { Component, ECS, System, type Entity } from "../ecs";
+import { PositionComp } from "./movement";
 
 var ctx: CanvasRenderingContext2D;
-
-export const DEFAULT_TEXT_COLOR = "white"
+var canvas: HTMLCanvasElement;
 
 export function setupRendering(ecs: ECS) {
     setupCanvas()
     ecs.addSystem(new DrawShape());
     ecs.addSystem(new DrawText());
-
-    const text = ecs.addEntity();
-    ecs.addComponent(text, new PositionComp(100, 100))
-    ecs.addComponent(text, new TextComp("test", "white", "black"))
-
-    const square = ecs.addEntity()
-    ecs.addComponent(square, new PositionComp(300, 100))
-    ecs.addComponent(square, new ShapeComp({ type: "square", height: 50, width: 50 }, "red"))
-
-    const circleText = ecs.addEntity()
-    ecs.addComponent(circleText, new PositionComp(500, 100))
-    ecs.addComponent(circleText, new ShapeComp({ type: "circle", radius: 30 }, "red"))
-    ecs.addComponent(circleText, new TextComp("c", "white", "red"))
+    ecs.addSystem(new ClearCanvas())
 }
 
 function setupCanvas() {
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    canvas = document.getElementById("canvas") as HTMLCanvasElement;
     ctx = canvas.getContext("2d")!
     ctx.textAlign = "left";
     ctx.font = "20px Consolas";
     ctx.fillStyle = "black";
-}
-
-export class PositionComp extends Component {
-    constructor(public x: number, public y: number) { super(); }
 }
 
 export type Square = {
@@ -53,11 +37,12 @@ export class ShapeComp extends Component {
 }
 
 export class DrawShape extends System {
+    public executionOrder: number = 2;
     componentsRequired = new Set<Function>([ShapeComp, PositionComp]);
-    update(_entities: Set<Entity>): void {
-        _entities.forEach((entity) => {
+    update(entities: Set<Entity>): void {
+        entities.forEach((entity) => {
             const shapeComp = this.ecs.getComponents(entity).get(ShapeComp);
-            const position = this.ecs.getComponents(entity).get(PositionComp);
+            const position = this.ecs.getComponents(entity).get(PositionComp).val;
             ctx.fillStyle = shapeComp.color
 
             const shape = shapeComp.shape
@@ -79,11 +64,12 @@ export class TextComp extends Component {
 }
 
 class DrawText extends System {
+    public executionOrder: number = 3;
     componentsRequired = new Set<Function>([TextComp, PositionComp]);
     update(_entities: Set<Entity>): void {
         _entities.forEach((entity) => {
             const text = this.ecs.getComponents(entity).get(TextComp);
-            const position = this.ecs.getComponents(entity).get(PositionComp);
+            const position = this.ecs.getComponents(entity).get(PositionComp).val;
             const metrics = ctx.measureText(text.content);
             const textWidth =
                 metrics.actualBoundingBoxRight + metrics.actualBoundingBoxLeft;
@@ -97,5 +83,14 @@ class DrawText extends System {
             ctx.fillStyle = text.textColor;
             ctx.fillText(text.content, position.x, position.y);
         })
+    }
+}
+
+class ClearCanvas extends System {
+    public componentsRequired: Set<Function> = new Set();
+    public executionOrder: number = 0;
+    public update(_: Set<Entity>): void {
+        console.log("clear canvas")
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
