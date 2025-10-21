@@ -56,8 +56,9 @@ export abstract class System {
      * code, so they need to be able to create, mutate, and destroy
      * Entities and Components.
      */
-    public ecs: ECS
+    public ecs!: ECS
 }
+
 
 /**
  * This type is so functions like the ComponentContainer's get(...) will

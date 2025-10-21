@@ -1,8 +1,8 @@
 import { ECS } from "../ecs";
 
-import { setupRendering, ShapeComp, TextComp } from "./rendering";
+import { setupRendering, ShapeComp, TextComp } from "./rendering/index";
 import { SpriteComp } from "./rendering";
-import { PositionComp, setupMovement, Vec2, VelocityComp } from "./movement";
+import { PositionComp, setupMovement, Vec2, VelocityComp } from "./logic";
 
 // Global ECS instance
 const ecs = new ECS();
